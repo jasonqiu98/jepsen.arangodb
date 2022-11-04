@@ -4,7 +4,8 @@
             [jepsen [control :as c]
              [db :as db]]
             [jepsen.control.util :as cu]
-            [jepsen.control :as c]))
+            [jepsen.tests :as tests]
+            [jepsen.os.debian :as debian]))
 
 (def dir "/opt/arangodb")
 (def bin-dir (str dir "/bin"))
@@ -12,9 +13,6 @@
 (def logfile "/home/vagrant/arangodb.log")
 (def pidfile "/home/vagrant/arangodb.pid")
 
-;; (def cluster-nodes-path (io/file (io/resource "nodes-vagrant.txt")))
-;; (def arangodb-properties-path (io/file (io/resource "arangodb.properties")))
-;; (def arangodb-properties-in (io/input-stream arangodb-properties-path))
 (def jwt-secret-path "/home/vagrant/arangodb.secret")
 
 (defn cli-arg
@@ -50,7 +48,9 @@
         (cli-arg "--server.storage-engine" "rocksdb")
         (cli-arg "--auth.jwt-secret" jwt-secret-path)
         (cli-arg "--starter.data-dir" "./data")
-        :--starter.join (initial-cluster test))))
+        ;; :--starter.join (initial-cluster test)
+        (cli-arg "--starter.join" (initial-cluster test))
+        )))
 
     (teardown! [_ test node]
       (info node "tearing down arangodb")
@@ -67,3 +67,12 @@
     db/LogFiles
     (log-files [_ test node]
       [logfile])))
+
+(def basic-test
+  "Given an options map from the command line runner (e.g. :nodes, :ssh,
+  :concurrency, ...), constructs a test map."
+  (merge tests/noop-test
+         {:name "arangodb-basic-test"
+          :os debian/os
+          :db (db-setup)
+          :pure-generators true}))

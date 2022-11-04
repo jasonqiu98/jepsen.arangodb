@@ -57,9 +57,10 @@ Now the VM is started and waits for the following commands.
 
 ## Start the test
 
-- Run `/bin/bash ./run.sh` to start your test! This script will restart all VMs before running the test by default.
-- If you just followed the previous section, you may want to skip the restart process by using `/bin/bash ./run.sh --skip-vagrant` instead.
-- Try `/bin/bash ./run.sh --time-limit 20 -r 1` (or `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 1`) to set a time limit of 20 seconds.
+### Start the register test
+
+- Without partition: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 50 --ops-per-key 10 --nemesis-type noop`.
+- With partition: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 50 --ops-per-key 10 --nemesis-type partition`
 
 Errors found? Consider generate a new public/private key pair by `ssh-keygen` and goes along the process again. Check you `ssh-agent` as well.
 

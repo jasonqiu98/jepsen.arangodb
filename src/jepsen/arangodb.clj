@@ -15,7 +15,14 @@
    [nil "--ops-per-key NUM" "Maximum number of operations on any given key."
     :default  200
     :parse-fn parse-long
-    :validate [pos? "Must be a positive integer."]]])
+    :validate [pos? "Must be a positive integer."]]
+   [nil "--nemesis-type partition|noop" "Nemesis used."
+    :default :partition
+    :parse-fn #(case %
+                 ("partition") :partition
+                 ("noop") :noop
+                 :invalid)
+    :validate [#{:partition :noop} "Unsupported nemesis"]]])
 
 (defn -main
   "Handles command line arguments. Can either run a test, or a web server for browsing results"
