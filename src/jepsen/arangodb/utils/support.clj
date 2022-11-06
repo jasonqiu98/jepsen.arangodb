@@ -39,6 +39,7 @@
        (let [url (str "https://download.arangodb.com/arangodb39/Community/Linux/arangodb3-linux-3.9.1.tar.gz")]
          (cu/install-archive! url dir)))
 
+      ; /opt/arangodb/bin/arangodb --server.storage-engine=rocksdb --auth.jwt-secret=/home/vagrant/arangodb.secret --starter.data-dir=./data --starter.join 192.168.56.101,192.168.56.102,192.168.56.103,192.168.56.104,192.168.56.105
       (c/su
        (cu/start-daemon!
         {:logfile logfile
@@ -48,7 +49,6 @@
         (cli-arg "--server.storage-engine" "rocksdb")
         (cli-arg "--auth.jwt-secret" jwt-secret-path)
         (cli-arg "--starter.data-dir" "./data")
-        ;; :--starter.join (initial-cluster test)
         (cli-arg "--starter.join" (initial-cluster test))
         )))
 

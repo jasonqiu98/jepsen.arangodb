@@ -14,10 +14,9 @@
 (defn w   [_ _] {:type :invoke, :f :write, :value (rand-int 5)})
 (defn cas [_ _] {:type :invoke, :f :cas, :value [(rand-int 5) (rand-int 5)]})
 
-(def dbName "register-test")
-(def collectionName "register-col")
-(def documentName "register-doc")
-;; (def attributeName "register-attr")
+(def dbName "registerTest")
+(def collectionName "registerCol")
+(def attributeName "registerAttr")
 
 (defrecord Client [db-created? collection-created? conn node]
   client/Client
@@ -71,11 +70,11 @@
       (try
         (case (:f op)
           :read (assoc op :type :ok,
-                       :value (-> conn (driver/read-document-attr dbName collectionName documentName (str k))))
-          :write (do (-> conn (driver/set-document-attr dbName collectionName documentName (str k) v))
+                       :value (-> conn (driver/read-attr dbName collectionName (str "\"" k "\"") attributeName)))
+          :write (do (-> conn (driver/write-attr dbName collectionName (str "\"" k "\"") attributeName v))
                      (assoc op :type :ok))
           :cas (let [[old new] v]
-                 (assoc op :type (if (-> conn (driver/compare-and-set-attr dbName collectionName documentName (str k) old new))
+                 (assoc op :type (if (-> conn (driver/cas-attr dbName collectionName (str "\"" k "\"") attributeName old new))
                                    :ok
                                    :fail))))
         (catch java.net.SocketTimeoutException ex

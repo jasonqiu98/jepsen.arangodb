@@ -59,7 +59,7 @@ Now the VM is started and waits for the following commands.
 
 ### Start the register test
 
-- Without partition: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 50 --ops-per-key 10 --nemesis-type noop`.
+- Without partition: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 50 --ops-per-key 10 --nemesis-type noop`
 - With partition: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 50 --ops-per-key 10 --nemesis-type partition`
 
 Errors found? Consider generate a new public/private key pair by `ssh-keygen` and goes along the process again. Check you `ssh-agent` as well.
