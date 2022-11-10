@@ -8,7 +8,9 @@
             [jepsen.arangodb.utils [driver :as driver]
              [support :as s]]
             [jepsen.checker.timeline :as timeline]
-            [knossos.model :as model]))
+            [knossos.model :as model]
+            [jepsen.independent :as independent]
+            [jepsen.checker :as checker]))
 
 (defn r   [_ _] {:type :invoke, :f :read, :value nil})
 (defn w   [_ _] {:type :invoke, :f :write, :value (rand-int 5)})
@@ -69,14 +71,12 @@
     (let [[k v] (:value op)]
       (try
         (case (:f op)
-          :read (assoc op :type :ok,
-                       :value (-> conn (driver/read-attr dbName collectionName (str "\"" k "\"") attributeName)))
+          :read (let [value (-> conn (driver/read-attr dbName collectionName (str k) attributeName))]
+                  (assoc op :type :ok, :value (independent/tuple k value)))
           :write (do (-> conn (driver/write-attr dbName collectionName (str "\"" k "\"") attributeName v))
                      (assoc op :type :ok))
-          :cas (let [[old new] v]
-                 (assoc op :type (if (-> conn (driver/cas-attr dbName collectionName (str "\"" k "\"") attributeName old new))
-                                   :ok
-                                   :fail))))
+          :cas (let [[old new] v res (-> conn (driver/cas-attr dbName collectionName (str "\"" k "\"") attributeName old new))]
+                 (assoc op :type (if res :ok :fail))))
         (catch java.net.SocketTimeoutException ex
           (assoc op :type :fail, :error :timeout))
         (catch java.lang.NullPointerException ex
@@ -119,20 +119,30 @@
                              :noop nemesis/noop)
           :checker         (checker/compose
                             {:perf   (checker/perf)
-                             :linear (checker/linearizable
-                                      {:model     (model/cas-register)
-                                       :algorithm :linear})
-                             :timeline (timeline/html)})
-          :generator       (->> (independent/concurrent-generator
-                                 10
-                                 (range)
-                                 (fn [k]
-                                   (->> (gen/mix [r w cas])
-                                        (gen/stagger (/ (:rate opts)))
-                                        (gen/limit (:ops-per-key opts)))))
-                                (gen/nemesis
-                                 (cycle [(gen/sleep 5)
-                                         {:type :info, :f :start}
-                                         (gen/sleep 5)
-                                         {:type :info, :f :stop}]))
-                                (gen/time-limit (:time-limit opts)))}))
+                             :indep  (independent/checker
+                                      (checker/compose
+                                       {:linear   (checker/linearizable {:model     (model/cas-register)
+                                                                         :algorithm :linear})
+                                        :timeline (timeline/html)}))})
+          :generator       (case (:nemesis-type opts)
+                             :partition (->> (independent/concurrent-generator
+                                              10
+                                              (range)
+                                              (fn [k]
+                                                (->> (gen/mix [r w cas])
+                                                     (gen/stagger (/ (:rate opts)))
+                                                     (gen/limit (:ops-per-key opts)))))
+                                             (gen/nemesis
+                                              (cycle [(gen/sleep 5)
+                                                      {:type :info, :f :start}
+                                                      (gen/sleep 5)
+                                                      {:type :info, :f :stop}]))
+                                             (gen/time-limit (:time-limit opts)))
+                             :noop (->> (independent/concurrent-generator
+                                         10
+                                         (range)
+                                         (fn [k]
+                                           (->> (gen/mix [r w cas])
+                                                (gen/stagger (/ (:rate opts)))
+                                                (gen/limit (:ops-per-key opts)))))
+                                        (gen/time-limit (:time-limit opts))))}))

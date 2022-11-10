@@ -31,6 +31,7 @@
   (-> conn (get-collection db-name collection-name) (.getDocument doc-key (.getClass (new BaseDocument)))))
 
 ; single operation, by Java Driver
+;; the doc-key should be a string quoted WITHOUT \"\"
 (defn read-attr
   "Read one document attribute from an ArangoDB collection."
   [conn db-name collection-name doc-key attr-key]
@@ -39,18 +40,19 @@
     (catch java.lang.NullPointerException e nil)))
 
 ;; transactional ensured by AQL query
+;; the doc-key should be a string quoted with \"\" (handled before passing into this function)
 (defn write-attr
   "Update an attribute of a document if it exists,
    otherwise create a new attribute of that document;
    If the document does not exist,
    create the document and then create the attribute"
   [conn db-name collection-name doc-key attr-key attr-value]
-  ; the doc-key should be a string quoted with \"\" (handled before passing into this function)
   ; e.g. INSERT {_key: "1", val: 4} INTO example OPTIONS {overwriteMode: "update"}
   (let [query (str "INSERT {_key: " doc-key ", " attr-key ": " attr-value "} INTO " collection-name " OPTIONS {overwriteMode: \"update\"}")]
     (-> conn (get-db db-name) (.query query nil))))
 
 ;; transactional ensured by AQL query
+;; the doc-key should be a string quoted with \"\" (handled before passing into this function)
 (defn cas-attr
   "Set the document attribute to the new value if and only if
    the old value matches the current value of the attribute,
