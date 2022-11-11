@@ -6,9 +6,9 @@ A Clojure library designed to test ArangoDB.
 
 Here I use an example to set up the environment on Linux Mint 21 / Ubuntu 22.04.
 
-1. Install [`virtualbox`](https://www.virtualbox.org/wiki/Linux_Downloads) and [`vagrant`](https://www.vagrantup.com/downloads) on your local machine.
+1. Install [Virtualbox](https://www.virtualbox.org/wiki/Linux_Downloads) and [Vagrant](https://www.vagrantup.com/downloads) on your local machine.
 2. Set up your local machine as the control node of this Jepsen test.
-    - Install [`Leiningen`](https://leiningen.org/) with `sudo apt install leiningen`
+    - Install [Leiningen](https://leiningen.org/) with `sudo apt install leiningen`
     - Install other dependencies using `sudo apt install libjna-java gnuplot graphviz`
 3. Create a public/private key pair for `vagrant` VMs
     1. Generate by `ssh-keygen`. Enter the path you want to save the key. Here I use the default path `~/.ssh/id_rsa`.
@@ -59,10 +59,17 @@ Now the VM is started and waits for the following commands.
 
 ### Start the register test
 
-- Without partition: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 50 --ops-per-key 10 --nemesis-type noop`
-- With partition: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 50 --ops-per-key 10 --nemesis-type partition`
+- Without partition: `/bin/bash ./run.sh --skip-vagrant`
+- With partition: `/bin/bash ./run.sh --skip-vagrant --nemesis-type partition`
+- With partition and time limit: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --nemesis-type partition`
+- Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --concurrency 20 --nemesis-type partition`
+- Other arguments: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop`
 
 Errors found? Consider generate a new public/private key pair by `ssh-keygen` and goes along the process again. Check you `ssh-agent` as well.
+
+### And more
+
+Click [here](doc/intro.md) to see the doc of the test(s).
 
 ## Acknowledgement
 

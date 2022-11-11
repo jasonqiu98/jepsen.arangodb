@@ -9,15 +9,19 @@
 (def cli-opts
   "Additional command line options."
   [["-r" "--rate HZ" "Approximate number of requests per second, per thread."
-    :default  20
+    :default  10
     :parse-fn read-string
     :validate [#(and (number? %) (pos? %)) "Must be a positive number"]]
    [nil "--ops-per-key NUM" "Maximum number of operations on any given key."
-    :default  200
+    :default  100
+    :parse-fn parse-long
+    :validate [pos? "Must be a positive integer."]]
+   [nil "--threads-per-group NUM" "Number of threads, per group."
+    :default  5
     :parse-fn parse-long
     :validate [pos? "Must be a positive integer."]]
    [nil "--nemesis-type partition|noop" "Nemesis used."
-    :default :partition
+    :default :noop
     :parse-fn #(case %
                  ("partition") :partition
                  ("noop") :noop
