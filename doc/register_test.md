@@ -30,7 +30,7 @@ The explanation of each option is as follows.
 
 ### Explanation
 
-The register test is designed to check the linearizability on several independent key-value registers. The first step is to create such registers in the following structure, make each document key as well as the value of the attribute `registerAttr` a key-value store. Here the keys are the results from the generator (cast to string type for facility), and the values are random integers in the range 0 to 4 (inclusive).
+The register test is designed to check the linearizability on several independent key-value registers. The first step is to create such registers in the following structure, which makes each pair of the document key and the value of `registerAttr` a key-value store. Here the keys are from the generator (cast to string type for facility), and the values are random integers that range from 0 to 4 (inclusive).
 
 - (db) `registerTest`
   - (collection) `registerCol`
@@ -39,11 +39,11 @@ The register test is designed to check the linearizability on several independen
     - ...
     - (doc_n) {`_key`: *keyn*, `registerAttr`: *valn*}
 
-With this data structure, a random generator will generate three types of atomic operations, i.e., read, write and compare-and-swap, on these registers. These operations are implemented in the following way.
+With this data structure, a random generator will generate three types of atomic operations, i.e., read, write and compare-and-swap (cas), on these registers. These operations are implemented in the following way.
 
 - Read: Use Java Driver to directly access the element by `key`. For example, to read the value under the key `"1"`, use `conn.db(DbName.of("registerTest").collection("registerCol").getDocument("1", BaseDocument.class).getAttribute("registerAttr")`.
 - Write: Use AQL. An example under the key `"1"` with value 4 is `INSERT {_key: "1", val: 4} INTO registerTest OPTIONS {overwriteMode: "update"}`.
-- Compare-and-swap: Use AQL. An example under the key `"1"` with old value 4 and new value 5 is `FOR d IN registerTest FILTER d._key == "1" AND d.val == 4 UPDATE d WITH {val: 5} IN registerTest RETURN true`.
+- CAS: Use AQL. An example under the key `"1"` with old value 4 and new value 5 is `FOR d IN registerTest FILTER d._key == "1" AND d.val == 4 UPDATE d WITH {val: 5} IN registerTest RETURN true`.
 
 After running the test suite under multiple independent keys, we can find the results under the subpath `store/arangodb-register-test` of the project path. Within a test folder, we can access the `independent` folder and get the result for each independent key, including the history, result and a timeline. Below is an example of the history and timeline of an independent key.
 
