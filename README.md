@@ -98,6 +98,8 @@ java.io.IOException: Reached the end of the stream.
     - `--max-txn-length` (maximum number of operations per txn)
     - `--max-writes-per-key` (maximum number of operations per key)
   - e.g. `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --key-count 5 --min-txn-length 4 --max-txn-length 8 --max-writes-per-key 3 --nemesis-type noop`
+- A simple test
+  - `/bin/bash ./run.sh --skip-vagrant --time-limit 10 -r 5 --concurrency 5 --key-count 3 --min-txn-length 3 --max-txn-length 5 --max-writes-per-key 2 --nemesis-type noop`
 
 ### And more
 

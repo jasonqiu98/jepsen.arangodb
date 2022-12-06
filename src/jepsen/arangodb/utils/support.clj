@@ -9,6 +9,7 @@
 
 (def dir "/opt/arangodb")
 (def bin-dir (str dir "/bin"))
+(def data-dir (str bin-dir "/data"))
 (def binary "arangodb")
 (def logfile "/home/vagrant/arangodb.log")
 (def pidfile "/home/vagrant/arangodb.pid")
@@ -48,7 +49,7 @@
         binary
         (cli-arg "--server.storage-engine" "rocksdb")
         (cli-arg "--auth.jwt-secret" jwt-secret-path)
-        (cli-arg "--starter.data-dir" "./data")
+        (cli-arg "--starter.data-dir" data-dir)
         (cli-arg "--starter.join" (initial-cluster test))
         )))
 
@@ -60,7 +61,9 @@
         ; https://github.com/jepsen-io/jepsen/blob/40b24800122433ea260bd188c05033059329d3a0/jepsen/src/jepsen/control/util.clj#L286
         (let [arango-procs (str/split (c/exec "pgrep" "arango") #"\n")]
           (c/su (c/exec "kill" "-9" arango-procs))
-          (info "processes" arango-procs "killed"))
+          (info "processes" arango-procs "killed")
+          ; delete the data directory
+          (c/su (c/exec :rm :-rf data-dir)))
         (catch clojure.lang.ExceptionInfo e
           (info "no arangodb processes killed"))))
 
