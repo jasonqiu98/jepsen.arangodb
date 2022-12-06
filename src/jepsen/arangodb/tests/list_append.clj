@@ -6,14 +6,11 @@
             [jepsen [checker :as checker]
              [client :as client]
              [generator :as gen]
-             [independent :as independent]
-             [nemesis :as nemesis]
-             [store :as store]]
+             [nemesis :as nemesis]]
             [jepsen.arangodb.utils [driver :as driver]
              [support :as s]]
             [jepsen.checker.timeline :as timeline]
-            [jepsen.tests.cycle.append :as la]
-            [knossos.model :as model])
+            [jepsen.tests.cycle.append :as la])
   (:import com.arangodb.model.StreamTransactionOptions))
 
 (def dbName "listAppend")

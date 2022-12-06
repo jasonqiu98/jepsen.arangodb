@@ -60,6 +60,7 @@ Now the VM is started and waits for the following commands.
 ### Start the register test
 
 - Without partition: `/bin/bash ./run.sh --skip-vagrant`
+  - The `--skip-vagrant` handle is recommended as it will let the program skip vagrant setup. If you have already followed the previous instructions, do include this handler; otherwise the VMs will be started by `vagrant up`, and you might lose some necessary configurations to run the program.
 - With partition: `/bin/bash ./run.sh --skip-vagrant --nemesis-type partition`
 - With partition and time limit: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --nemesis-type partition`
 - Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --concurrency 20 --nemesis-type partition`
