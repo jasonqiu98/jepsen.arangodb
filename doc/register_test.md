@@ -1,4 +1,4 @@
-# Testing linearizability of ArangoDB
+# Register Test of ArangoDB
 
 By *[Jason Qiu](https://github.com/jasonqiu98)*
 

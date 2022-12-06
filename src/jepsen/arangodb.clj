@@ -1,5 +1,6 @@
 (ns jepsen.arangodb
-  (:require [jepsen.arangodb.tests.register :as register]
+  (:require [jepsen.arangodb.tests [register :as register]
+                                    [list-append :as la]]
             [jepsen [cli :as cli]]))
 
 (defn parse-long
@@ -9,11 +10,11 @@
 (def cli-opts
   "Additional command line options."
   [["-r" "--rate HZ" "Approximate number of requests per second, per thread."
-    :default  10
+    :default  1
     :parse-fn read-string
     :validate [#(and (number? %) (pos? %)) "Must be a positive number"]]
    [nil "--ops-per-key NUM" "Maximum number of operations on any given key."
-    :default  100
+    :default  20
     :parse-fn parse-long
     :validate [pos? "Must be a positive integer."]]
    [nil "--threads-per-group NUM" "Number of threads, per group."
@@ -32,7 +33,16 @@
   "Handles command line arguments. Can either run a test, or a web server for browsing results"
   [& args]
   (cli/run! (merge
-             (cli/single-test-cmd {:test-fn register/register-test
+             (cli/single-test-cmd {
+                                   :test-fn la/list-append-test
+                                  ;;  :test-fn register/register-test
                                    :opt-spec cli-opts})
              (cli/serve-cmd))
             args))
+
+  ;; (cli/run! (merge (cli/test-all-cmd {:tests-fn (fn [opts] [(register/test opts)
+  ;;                                                           (comments/test opts)
+  ;;                                                           (sequential/test opts)])
+  ;;                                     :opt-spec cli-opts})
+  ;;                  (cli/serve-cmd))
+  ;;           args))

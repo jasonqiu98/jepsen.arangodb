@@ -1,23 +1,24 @@
-(ns jepsen.arangodb.tests.register
-  "Register test"
+(ns jepsen.arangodb.tests.list-append
+  "Detects cycles in histories where operations are transactions
+   over named lists, and operations are either appends or reads.
+   See elle.list-append for docs."
   (:require [clojure.tools.logging :refer :all]
             [jepsen [checker :as checker]
              [client :as client]
              [generator :as gen]
              [independent :as independent]
-             [nemesis :as nemesis]]
+             [nemesis :as nemesis]
+             [store :as store]]
             [jepsen.arangodb.utils [driver :as driver]
              [support :as s]]
             [jepsen.checker.timeline :as timeline]
-            [knossos.model :as model]))
+            [jepsen.tests.cycle.append :as la]
+            [knossos.model :as model])
+  (:import com.arangodb.model.StreamTransactionOptions))
 
-(defn r   [_ _] {:type :invoke, :f :read, :value nil})
-(defn w   [_ _] {:type :invoke, :f :write, :value (rand-int 5)})
-(defn cas [_ _] {:type :invoke, :f :cas, :value [(rand-int 5) (rand-int 5)]})
-
-(def dbName "registerTest")
-(def collectionName "registerCol")
-(def attributeName "registerAttr")
+(def dbName "listAppend")
+(def collectionName "laCol")
+(def attributeName "laAttr")
 
 (defrecord Client [db-created? collection-created? conn node]
   client/Client
@@ -67,24 +68,35 @@
                (reset! collection-created? true))))))
 
   (invoke! [this test op]
-    (let [[k v] (:value op)]
+    ; operation from {:type :invoke, :f :txn, :value [[:r 3 nil] [:append 3 2] [:r 3]]}
+    ; to {:type :ok, :f :txn, :value [[:r 3 [1]] [:append 3 2] [:r 3 [1 2]]]}
+    (let [txn-vec (:value op)
+          db (-> conn (driver/get-db dbName))
+          txn-entity (.beginStreamTransaction db (.writeCollections (new StreamTransactionOptions) (into-array [collectionName])))
+          txn-id (.getId txn-entity)]
       (try
-        (case (:f op)
-          :read (let [value (-> conn (driver/read-attr-type dbName collectionName k attributeName Integer))]
-                  (assoc op :type :ok, :value (independent/tuple k value)))
-          :write (do (-> conn (driver/write-attr dbName collectionName k attributeName v))
-                     (assoc op :type :ok))
-          :cas (let [[old new] v
-                     res (-> conn (driver/cas-attr dbName collectionName k attributeName old new))]
-                 (assoc op :type (if res :ok :fail))))
+        (let [ret-val (driver/submit-txn conn dbName collectionName attributeName txn-vec txn-entity)]
+          (if (not= ret-val nil)
+            (do (.commitStreamTransaction db txn-id)
+                (info (str "committed transaction " txn-id))
+                (assoc op :type :ok :value ret-val))
+            (do (.abortStreamTransaction db txn-id)
+                (info (str "aborted transaction " txn-id))
+                (assoc op :type :fail))))
         (catch java.net.SocketTimeoutException ex
+          (.abortStreamTransaction db txn-id)
+          (info (str "aborted transaction " txn-id))
           (assoc op :type :fail, :error :timeout))
         (catch java.lang.NullPointerException ex
+          (.abortStreamTransaction db txn-id)
+          (info (str "aborted transaction " txn-id))
           (error "Connection error")
           (assoc op
                  :type  (if (= :read (:f op)) :fail :info)
                  :error :connection-lost))
         (catch com.arangodb.ArangoDBException ex
+          (.abortStreamTransaction db txn-id)
+          (info (str "aborted transaction " txn-id))
           (warn (.getErrorMessage ex))
         ;; 1200 write-write conflict; key: Anna
         ;; 1465 cluster internal HTTP connection broken
@@ -106,38 +118,21 @@
 
   (close! [_ test]))
 
-(defn register-test
+(defn list-append-test
   "Given an options map from the command line runner (e.g. :nodes, :ssh,
   :concurrency, ...), constructs a test map."
   [opts]
   (merge s/basic-test
          opts
-         {:name            "arangodb-register-test"
+         {:name            "arangodb-list-append-test"
           :client          (Client. (atom false) (atom false) nil nil)
-          :nemesis         (case (:nemesis-type opts)
-                             :partition (nemesis/partition-random-halves)
-                             :noop nemesis/noop)
+          :nemesis         nemesis/noop
+          ;; from https://github.com/jepsen-io/jepsen/blob/main/jepsen/src/jepsen/tests/cycle/append.clj
+          :generator       (->> (la/gen opts)
+                                (gen/stagger (/ (:rate opts)))
+                                (gen/nemesis nil)
+                                (gen/time-limit (:time-limit opts)))
           :checker         (checker/compose
-                            {:perf   (checker/perf)
-                             :indep  (independent/checker
-                                      (checker/compose
-                                       {:linear   (checker/linearizable {:model     (model/cas-register)
-                                                                         :algorithm :linear})
-                                        :timeline (timeline/html)}))})
-          :generator       (let [independent-gen (independent/concurrent-generator
-                                                  (:threads-per-group opts)
-                                                  (range)
-                                                  (fn [k]
-                                                    (->> (gen/mix [r w cas])
-                                                         (gen/stagger (/ (:rate opts)))
-                                                         (gen/limit (:ops-per-key opts)))))]
-                             (case (:nemesis-type opts)
-                               :partition (->> independent-gen
-                                               (gen/nemesis
-                                                (cycle [(gen/sleep 5)
-                                                        {:type :info, :f :start}
-                                                        (gen/sleep 5)
-                                                        {:type :info, :f :stop}]))
-                                               (gen/time-limit (:time-limit opts)))
-                               :noop (->> independent-gen
-                                          (gen/time-limit (:time-limit opts)))))}))
+                            {:la     (la/checker)
+                             :perf   (checker/perf)
+                             :timeline (timeline/html)})}))

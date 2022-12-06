@@ -67,6 +67,10 @@ Now the VM is started and waits for the following commands.
 
 Errors found? Consider generate a new public/private key pair by `ssh-keygen` and goes along the process again. Check you `ssh-agent` as well.
 
+### Start the list append test
+
+`/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop`
+
 ### And more
 
 Click [here](doc/intro.md) to see the doc of the test(s).
