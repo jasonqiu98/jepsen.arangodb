@@ -13,12 +13,30 @@
     :default  1
     :parse-fn read-string
     :validate [#(and (number? %) (pos? %)) "Must be a positive number"]]
+   ; register-test independent-gen related
    [nil "--ops-per-key NUM" "Maximum number of operations on any given key."
     :default  20
     :parse-fn parse-long
     :validate [pos? "Must be a positive integer."]]
    [nil "--threads-per-group NUM" "Number of threads, per group."
     :default  5
+    :parse-fn parse-long
+    :validate [pos? "Must be a positive integer."]]
+   ; list-append-test related
+   [nil "--key-count NUM" "Number of distinct keys at any point."
+    :default  5
+    :parse-fn parse-long
+    :validate [pos? "Must be a positive integer."]]
+   [nil "--min-txn-length NUM" "Minimum number of operations per txn."
+    :default  4
+    :parse-fn parse-long
+    :validate [pos? "Must be a positive integer."]]
+   [nil "--max-txn-length NUM" "Maximum number of operations per txn."
+    :default  8
+    :parse-fn parse-long
+    :validate [pos? "Must be a positive integer."]]
+   [nil "--max-writes-per-key NUM" "Maximum number of operations per key."
+    :default  3
     :parse-fn parse-long
     :validate [pos? "Must be a positive integer."]]
    [nil "--nemesis-type partition|noop" "Nemesis used."

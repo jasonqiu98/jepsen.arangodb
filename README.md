@@ -65,11 +65,38 @@ Now the VM is started and waits for the following commands.
 - Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --concurrency 20 --nemesis-type partition`
 - Other arguments: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop`
 
-Errors found? Consider generate a new public/private key pair by `ssh-keygen` and goes along the process again. Check you `ssh-agent` as well.
+Errors found?
+
+- Consider generate a new public/private key pair by `ssh-keygen` and goes along the process again. Check your `ssh-agent` as well.
+- If the nemesis type is `partition`, you might see some errors in the end of the output like the following one. This is an internal error raised because of the force shutdown of the program. See it more like a warning instead of an actual error :)
+
+```
+ERROR [2022-12-05 13:08:26,006] pool-6-thread-1 - com.arangodb.internal.velocystream.internal.MessageStore Reached the end of the stream.
+java.io.IOException: Reached the end of the stream.
+        at com.arangodb.internal.velocystream.internal.VstConnection.readBytesIntoBuffer(VstConnection.java:348)
+        at com.arangodb.internal.velocystream.internal.VstConnection.readBytes(VstConnection.java:340)
+        at com.arangodb.internal.velocystream.internal.VstConnection.readChunk(VstConnection.java:315)
+        at com.arangodb.internal.velocystream.internal.VstConnection.lambda$open$0(VstConnection.java:212)
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:829)
+```
 
 ### Start the list append test
 
-`/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop`
+- Without partition: `/bin/bash ./run.sh --skip-vagrant`
+- With partition: `/bin/bash ./run.sh --skip-vagrant --nemesis-type partition`
+- With partition and time limit: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --nemesis-type partition`
+- Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --concurrency 20 --nemesis-type partition`
+- Other arguments:
+  - `-r 10` (rate of operations)
+  - generator-related args (See [link](https://github.com/jepsen-io/elle/blob/main/src/elle/list_append.clj#L920))
+    - `--key-count` (number of distinct keys at any point)
+    - `--min-txn-length` (minimum number of operations per txn)
+    - `--max-txn-length` (maximum number of operations per txn)
+    - `--max-writes-per-key` (maximum number of operations per key)
+  - e.g. `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --key-count 5 --min-txn-length 4 --max-txn-length 8 --max-writes-per-key 3 --nemesis-type noop`
 
 ### And more
 

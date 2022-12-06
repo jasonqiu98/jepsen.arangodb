@@ -9,7 +9,8 @@
             [jepsen.arangodb.utils [driver :as driver]
              [support :as s]]
             [jepsen.checker.timeline :as timeline]
-            [knossos.model :as model]))
+            [knossos.model :as model]
+            [jepsen.generator :as gen]))
 
 (defn r   [_ _] {:type :invoke, :f :read, :value nil})
 (defn w   [_ _] {:type :invoke, :f :write, :value (rand-int 5)})
@@ -140,4 +141,5 @@
                                                         {:type :info, :f :stop}]))
                                                (gen/time-limit (:time-limit opts)))
                                :noop (->> independent-gen
+                                          (gen/nemesis nil)
                                           (gen/time-limit (:time-limit opts)))))}))

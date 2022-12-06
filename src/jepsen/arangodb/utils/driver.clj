@@ -1,8 +1,7 @@
 (ns jepsen.arangodb.utils.driver
   (:require [clojure.tools.logging :refer :all])
   (:import (com.arangodb DbName)
-           com.arangodb.entity.BaseDocument
-           com.arangodb.model.StreamTransactionOptions
+          ;;  com.arangodb.entity.BaseDocument
            com.arangodb.model.AqlQueryOptions))
 
 (defn get-db

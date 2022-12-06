@@ -126,12 +126,23 @@
          opts
          {:name            "arangodb-list-append-test"
           :client          (Client. (atom false) (atom false) nil nil)
-          :nemesis         nemesis/noop
+          :nemesis         (case (:nemesis-type opts)
+                             :partition (nemesis/partition-random-halves)
+                             :noop nemesis/noop)
           ;; from https://github.com/jepsen-io/jepsen/blob/main/jepsen/src/jepsen/tests/cycle/append.clj
-          :generator       (->> (la/gen opts)
-                                (gen/stagger (/ (:rate opts)))
-                                (gen/nemesis nil)
-                                (gen/time-limit (:time-limit opts)))
+          :generator       (let [la-gen (->> (la/gen opts)
+                                             (gen/stagger (/ (:rate opts))))]
+                             (case (:nemesis-type opts)
+                               :partition (->> la-gen
+                                               (gen/nemesis
+                                                (cycle [(gen/sleep 5)
+                                                        {:type :info, :f :start}
+                                                        (gen/sleep 5)
+                                                        {:type :info, :f :stop}]))
+                                               (gen/time-limit (:time-limit opts)))
+                               :noop (->> la-gen
+                                          (gen/nemesis nil)
+                                          (gen/time-limit (:time-limit opts)))))
           :checker         (checker/compose
                             {:la     (la/checker)
                              :perf   (checker/perf)
