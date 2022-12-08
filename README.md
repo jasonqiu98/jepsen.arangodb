@@ -59,12 +59,12 @@ Now the VM is started and waits for the following commands.
 
 ### Start the register test
 
-- Without partition: `/bin/bash ./run.sh --skip-vagrant`
-  - The `--skip-vagrant` handle is recommended as it will let the program skip vagrant setup. If you have already followed the previous instructions, do include this handler; otherwise the VMs will be started by `vagrant up`, and you might lose some necessary configurations to run the program.
-- With partition: `/bin/bash ./run.sh --skip-vagrant --nemesis-type partition`
-- With partition and time limit: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --nemesis-type partition`
-- Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --concurrency 20 --nemesis-type partition`
-- Other arguments: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop`
+- Basic test (without partition): `/bin/bash ./run.sh --skip-vagrant --test-type register`
+  - The `--skip-vagrant` handle is recommended as it will let the program skip vagrant setup. If you have already followed the previous instructions, do include this handler; otherwise the VMs will be started by `vagrant up`, and you might lose some necessary configurations to run the program. Note that the `--skip-vagrant` handle should be placed immediately after `/bin/bash ./run.sh` as part of the start of the command.
+- With partition: `/bin/bash ./run.sh --skip-vagrant --test-type register --nemesis-type partition`
+- With partition and time limit: `/bin/bash ./run.sh --skip-vagrant --test-type register --time-limit 20 --nemesis-type partition`
+- Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --test-type register --time-limit 20 --concurrency 20 --nemesis-type partition`
+- Other arguments: `/bin/bash ./run.sh --skip-vagrant --test-type register --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop`
 
 Errors found?
 
@@ -86,10 +86,10 @@ java.io.IOException: Reached the end of the stream.
 
 ### Start the list append test
 
-- Without partition: `/bin/bash ./run.sh --skip-vagrant`
-- With partition: `/bin/bash ./run.sh --skip-vagrant --nemesis-type partition`
-- With partition and time limit: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --nemesis-type partition`
-- Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --time-limit 20 --concurrency 20 --nemesis-type partition`
+- Basic test (without partition): `/bin/bash ./run.sh --skip-vagrant --test-type la`
+- With partition: `/bin/bash ./run.sh --skip-vagrant --test-type la --nemesis-type partition`
+- With partition and time limit: `/bin/bash ./run.sh --skip-vagrant --test-type la --time-limit 20 --nemesis-type partition`
+- Increase number of concurrecy: `/bin/bash ./run.sh --skip-vagrant --test-type la --time-limit 20 --concurrency 20 --nemesis-type partition`
 - Other arguments:
   - `-r 10` (rate of operations)
   - generator-related args (See [link](https://github.com/jepsen-io/elle/blob/main/src/elle/list_append.clj#L920))
@@ -97,9 +97,7 @@ java.io.IOException: Reached the end of the stream.
     - `--min-txn-length` (minimum number of operations per txn)
     - `--max-txn-length` (maximum number of operations per txn)
     - `--max-writes-per-key` (maximum number of operations per key)
-  - e.g. `/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --key-count 5 --min-txn-length 4 --max-txn-length 8 --max-writes-per-key 3 --nemesis-type noop`
-- A simple test
-  - `/bin/bash ./run.sh --skip-vagrant --time-limit 10 -r 5 --concurrency 5 --key-count 3 --min-txn-length 3 --max-txn-length 5 --max-writes-per-key 2 --nemesis-type noop`
+  - e.g. `/bin/bash ./run.sh --skip-vagrant --test-type la --time-limit 20 -r 10 --concurrency 20 --key-count 5 --min-txn-length 4 --max-txn-length 8 --max-writes-per-key 3 --nemesis-type noop`
 
 ### And more
 

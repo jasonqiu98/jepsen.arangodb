@@ -1,11 +1,8 @@
 (ns jepsen.arangodb
   (:require [jepsen.arangodb.tests [register :as register]
-                                    [list-append :as la]]
-            [jepsen [cli :as cli]]))
-
-(defn parse-long
-  [x]
-  (Long/parseLong x))
+             [list-append :as la]]
+            [jepsen [cli :as cli]]
+            [jepsen.tests :as tests]))
 
 (def cli-opts
   "Additional command line options."
@@ -45,22 +42,28 @@
                  ("partition") :partition
                  ("noop") :noop
                  :invalid)
-    :validate [#{:partition :noop} "Unsupported nemesis"]]])
+    :validate [#{:partition :noop} "Unsupported nemesis"]]
+   [nil "--test-type register|la" "Test type used."
+    :default :invalid
+    :parse-fn #(case %
+                 ("register") :register
+                 ("la") :list-append
+                 :invalid)
+    :validate [#{:register :list-append} "Unsupported test type"]]])
+
+(defn single-test-wrapper
+  "a wrapper from the register test and list append test"
+  [opts]
+  (let [test-fn (case (:test-type opts)
+                  :register register/register-test
+                  :list-append la/list-append-test
+                  tests/noop-test)]
+    (test-fn opts)))
 
 (defn -main
   "Handles command line arguments. Can either run a test, or a web server for browsing results"
   [& args]
-  (cli/run! (merge
-             (cli/single-test-cmd {
-                                   :test-fn la/list-append-test
-                                  ;;  :test-fn register/register-test
-                                   :opt-spec cli-opts})
-             (cli/serve-cmd))
+  (cli/run! (merge (cli/single-test-cmd {:test-fn single-test-wrapper
+                                         :opt-spec cli-opts})
+                   (cli/serve-cmd))
             args))
-
-  ;; (cli/run! (merge (cli/test-all-cmd {:tests-fn (fn [opts] [(register/test opts)
-  ;;                                                           (comments/test opts)
-  ;;                                                           (sequential/test opts)])
-  ;;                                     :opt-spec cli-opts})
-  ;;                  (cli/serve-cmd))
-  ;;           args))
