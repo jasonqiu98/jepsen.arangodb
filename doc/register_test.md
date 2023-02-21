@@ -15,7 +15,7 @@ A quick way to start an ArangoDB cluster by default is to use `arangodb`, namely
 To quickly start a register test, use the following command under the project path. This test will allow 20 concurrent threads to run 20 seconds, with 10 operations for each independent key.
 
 ```shell
-/bin/bash ./run.sh --skip-vagrant --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop
+/bin/bash ./run.sh --skip-vagrant --test-type register --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type noop
 ```
 
 The explanation of each option is as follows.
@@ -81,6 +81,10 @@ With the `partition` value in the argument, the network will be randomly partiti
 <img src="pics/partition.png" width="400"/>
 
 With this partition, the linearizability is still not violated. However, an interesting finding is that the partitioned cluster **cannot be recovered** after the time limit runs out. A possible reason is that the agency is already stopped so this recovery cannot be technically achieved.
+
+```shell
+/bin/bash ./run.sh --skip-vagrant --test-type register --time-limit 20 -r 10 --concurrency 20 --ops-per-key 10 --threads-per-group 5 --nemesis-type partition
+```
 
 Below is an example output. The system does not respond after the last timestamp, no more information is output to the console, and the Jepsen test is not ended, either.
 
