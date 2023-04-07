@@ -72,7 +72,7 @@
           txn-entity (.beginStreamTransaction db (.writeCollections (new StreamTransactionOptions) (into-array [collectionName])))
           txn-id (.getId txn-entity)]
       (try
-        (let [ret-val (driver/submit-txn conn dbName collectionName attributeName txn-vec txn-entity)]
+        (let [ret-val (driver/submit-txn-la conn dbName collectionName attributeName txn-vec txn-entity)]
           (if (not= ret-val nil)
             (do (.commitStreamTransaction db txn-id)
                 (info (str "committed transaction " txn-id))
